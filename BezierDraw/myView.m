@@ -9,10 +9,10 @@
 #import "myView.h"
 
 @interface myView (){
-  //  int mouseLocX;
-  //  int mouseLocY;
-  //  NSMutableArray *mouseStoreX,*mouseStoreY;
-//    int locX,locY;
+//  int mouseLocX;
+//  int mouseLocY;
+//  NSMutableArray *mouseStoreX,*mouseStoreY;
+//  int locX,locY;
     short mouseClick,pointSelect;
     NSBezierPath *Box;
 }
@@ -24,55 +24,82 @@
 
 -(void)mouseDown:(NSEvent *)theEvent{
     if (!myMutaryOfPoints) myMutaryOfPoints = [[NSMutableArray alloc] init];
-    if (!myBoxes) myBoxes = [[NSMutableArray alloc] init];
+  //if (!myBoxes) myBoxes = [[NSMutableArray alloc] init];
     if (!mouseClick) mouseClick = 1;
     if (pointSelect) pointSelect = 0;
     NSPoint tvarMousePointInWindow = [theEvent locationInWindow];
     NSPoint tvarMousePointInView   = [self convertPoint:tvarMousePointInWindow fromView:nil];
-    myPoint *tvarMyPointObj       = [[myPoint alloc]initWithNSPoint:tvarMousePointInView];
+    myPoint *tvarMyPointObj        = [[myPoint alloc]initWithNSPoint:tvarMousePointInView];
     
     //locX = [tvarMyPointObj x];
     //locY = [tvarMyPointObj y];
     
     switch (mouseClick) {
         case 1:
-          //  NSLog(@"first point");
             [myMutaryOfPoints addObject:tvarMyPointObj];
             mouseClick ++;
             break;
         case 2:
-         //   NSLog(@"add lines ");
             [myMutaryOfPoints addObject:tvarMyPointObj];
             [myMutaryOfPoints addObject:tvarMyPointObj];
-            
             //update with new middle
             myMutaryOfPoints = [self middleLocation:myMutaryOfPoints];
-            mouseClick = 2;
+            if (myMutaryOfPoints.count >= 4) {
+                mouseClick = 3;
+            } else {
+                mouseClick = 2;
+            }
             break;
         case 3:
-            NSLog(@"click:%hhd",[Box containsPoint:tvarMousePointInView]);
-         /*if ([PathA containsPoint:tvarMousePointInView] == true) {
+            //creat a loop to find the
+            NSLog(@"");
+            pointSelect = 0;
+            short pointCount = 0;
+            
+            for (int i = 0; i < [myMutaryOfPoints count]; i++) {
+                NSBezierPath *boxSel = [NSBezierPath bezierPathWithRect:NSMakeRect((int)[myMutaryOfPoints[i] x],(int)[myMutaryOfPoints[i] y], 10, 10)];
+                NSLog(@"click:%hhd",[boxSel containsPoint:tvarMousePointInView]);
+                if ([boxSel containsPoint:tvarMousePointInView] == true) {
+                    NSLog(@"hit test true:%d",pointCount);
+                    pointSelect = pointCount;
+                }
+                pointCount ++;
+            }
+            
+       /*  if ([Box containsPoint:tvarMousePointInView] == true) {
                 NSLog(@"hit test A");
                 pointSelect = 0;
-            }
-          */
+            }*/
+            
             break;
         default:
             break;
     }
+    
+}
+
+-(void)mouseDragged:(NSEvent *)event{
+//  NSLog(@"mosue move");
+    if (mouseClick == 3) {
+        NSPoint tvarMousePointInWindow = [event locationInWindow];
+        NSPoint tvarMousePointInView   = [self convertPoint:tvarMousePointInWindow fromView:nil];
+        myPoint * tvarMyPointObj       = [[myPoint alloc]initWithNSPoint:tvarMousePointInView];
+        
+        [myMutaryOfPoints replaceObjectAtIndex:pointSelect withObject:tvarMyPointObj];
+        
+        [self setNeedsDisplay:YES];
+    }
 }
 
 -(void)mouseUp:(NSEvent *)theEvent{
-//set array cauculation
     [self setNeedsDisplay:YES];
 }//end
 
 - (void)drawRect:(NSRect)dirtyRect {
    //Drawing code here.
     [super drawRect:dirtyRect];
-    [[NSColor blackColor] setFill];
+    [[NSColor whiteColor] setFill];
     NSRectFill( dirtyRect);
-    
     if (myMutaryOfPoints) [self WileECoyote];
    // drawLine *dl = [[drawLine alloc]init];
    // [dl myLine];
@@ -92,14 +119,16 @@
     for (int i = 0; i < pountCount; i++) {
         //draw box location
         Box = [NSBezierPath bezierPathWithRect:NSMakeRect((int)[myMutaryOfPoints[i] x],(int)[myMutaryOfPoints[i] y], 10, 10)];
-        // [[NSColor whiteColor] set];
-        // [Path fill];
-        [[NSColor whiteColor] set];
+        
+        [[NSColor blueColor] set];
+        [Box fill];
+        
+        [[NSColor grayColor] set];
         [Box setLineWidth:2.0];
         [Box stroke];
 //draw line
         if (i == 0) {
-        //   NSLog(@"move to:%d",i);
+//   NSLog(@"move to:%d",i);
            locX1  = (int)[myMutaryOfPoints[i] x];
            locY1  = (int)[myMutaryOfPoints[i] y];
            [line moveToPoint:NSMakePoint(locX1, locY1)];
@@ -129,7 +158,6 @@
       //NSLog(@"index vaule1:%d",index1);
         for (int i = 0; i < pountCount/2; i++) {
           //  NSLog(@"index vaule2:%d vaule3:%d",index2,index3);
-     
             [curve curveToPoint:NSMakePoint((int)[myMutaryOfPoints [index3] x],(int)[myMutaryOfPoints [index3] y])
                   controlPoint1:NSMakePoint((int)[myMutaryOfPoints [index2] x],(int)[myMutaryOfPoints [index2] y])
                   controlPoint2:NSMakePoint((int)[myMutaryOfPoints [index2] x],(int)[myMutaryOfPoints [index2] y])];
@@ -162,12 +190,12 @@
 }*/
 
 -(NSMutableArray*)middleLocation:(NSMutableArray*)midAry{
-    //formale (x1 + x2)/2 (y1+ y2)/2
+//formale (x1 + x2)/2 (y1+ y2)/2
     int x1,x2,y1,y2;
     int midx,midy;
     //find ary locations
     int aryLength = (int) midAry.count;
-// NSLog(@"start:%d",aryLength-2);
+//NSLog(@"start:%d",aryLength-2);
     if (midAry) {
         x1 = [[midAry objectAtIndex:aryLength-3] x];
         y1 = [[midAry objectAtIndex:aryLength-3] y];
